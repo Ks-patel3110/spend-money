@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Bill Gates' Money - Interactive Simulator</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2086/2086775.png">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .money-counter {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .item-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .buy-btn:active, .sell-btn:active {
+            transform: scale(0.95);
+        }
+        .budget-animation {
+            animation: pulse 0.3s ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .item-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-800 mb-4">Spend Bill Gates' Money</h1>
+            <div class="bg-white rounded-lg shadow-lg p-6 inline-block">
+                <div class="text-2xl md:text-4xl money-counter text-green-600" id="budget">$100,000,000,000</div>
+                <div class="text-gray-600 mt-2">Remaining Budget</div>
+            </div>
+        </div>
+
+        <!-- Items Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="itemsGrid">
+            <!-- Items will be dynamically generated here -->
+        </div>
+
+        <!-- Receipt -->
+        <div class="mt-12 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-receipt mr-2"></i>Your Shopping Cart
+            </h2>
+            <div id="receipt" class="space-y-2">
+                <div class="text-gray-600">No items purchased yet</div>
+            </div>
+            <div class="border-t pt-4 mt-4">
+                <div class="flex justify-between items-center font-bold text-lg">
+                    <span>Total Spent:</span>
+                    <span class="text-red-600 money-counter" id="totalSpent">$0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SpendingSimulator {
+            constructor() {
+                this.initialBudget = 100000000000; // $100 billion
+                this.currentBudget = this.initialBudget;
+                this.purchases = {};
+                this.items = [
+                    { name: "Big Mac", price: 2, icon: "🍔" },
+                    { name: "Flip Flops", price: 3, icon: "🩴" },
+                    { name: "Coca-Cola Pack", price: 5, icon: "🥤" },
+                    { name: "Movie Ticket", price: 12, icon: "🎬" },
+                    { name: "Book", price: 15, icon: "📚" },
+                    { name: "Lobster Dinner", price: 45, icon: "🦞" },
+                    { name: "Video Game", price: 60, icon: "🎮" },
+                    { name: "Amazon Echo", price: 99, icon: "🔊" },
+                    { name: "Year of Netflix", price: 100, icon: "📺" },
+                    { name: "Air Jordans", price: 125, icon: "👟" },
+                    { name: "Airpods", price: 199, icon: "🎧" },
+                    { name: "Gaming Console", price: 299, icon: "🎯" },
+                    { name: "Drone", price: 350, icon: "🚁" },
+                    { name: "Smartphone", price: 699, icon: "📱" },
+                    { name: "Bike", price: 800, icon: "🚲" },
+                    { name: "Kitten", price: 1500, icon: "🐱" },
+                    { name: "Puppy", price: 1500, icon: "🐶" },
+                    { name: "Auto Rickshaw", price: 2300, icon: "🛺" },
+                    { name: "Horse", price: 2500, icon: "🐎" },
+                    { name: "Acre of Farmland", price: 3000, icon: "🌾" },
+                    { name: "Designer Handbag", price: 5500, icon: "👜" },
+                    { name: "Hot Tub", price: 6000, icon: "🛁" },
+                    { name: "Luxury Wine", price: 7000, icon: "🍷" },
+                    { name: "Diamond Ring", price: 10000, icon: "💎" },
+                    { name: "Jet Ski", price: 12000, icon: "🏄" },
+                    { name: "Rolex", price: 15000, icon: "⌚" },
+                    { name: "Ford F-150", price: 30000, icon: "🚗" },
+                    { name: "Tesla", price: 75000, icon: "⚡" },
+                    { name: "Monster Truck", price: 150000, icon: "🚛" },
+                    { name: "Ferrari", price: 250000, icon: "🏎️" },
+                    { name: "Single Family Home", price: 300000, icon: "🏠" },
+                    { name: "McLaren Supercar", price: 350000, icon: "🏎️" },
+                    { name: "Lamborghini", price: 500000, icon: "🐂" },
+                    { name: "Gold Bar", price: 700000, icon: "🏅" },
+                    { name: "McDonalds Franchise", price: 1500000, icon: "🍟" },
+                    { name: "Bugatti Chiron", price: 3200000, icon: "🚗" },
+                    { name: "Superbowl Ad", price: 5250000, icon: "📢" },
+                    { name: "Yacht", price: 7500000, icon: "🛥️" },
+                    { name: "M1 Abrams", price: 8000000, icon: "🔫" },
+                    { name: "Formula 1 Car", price: 15000000, icon: "🏁" },
+                    { name: "Apache Helicopter", price: 31000000, icon: "🚁" },
+                    { name: "Mansion", price: 45000000, icon: "🏰" },
+                    { name: "Private Island", price: 50000000, icon: "🏝️" },
+                    { name: "Space Tourism Ticket", price: 55000000, icon: "🚀" },
+                    { name: "Private Jet", price: 65000000, icon: "✈️" },
+                    { name: "Make a Movie", price: 100000000, icon: "🎭" },
+                    { name: "Penthouse Suite", price: 120000000, icon: "🏙️" },
+                    { name: "Boeing 747", price: 148000000, icon: "✈️" },
+                    { name: "Art Collection", price: 200000000, icon: "🎨" },
+                    { name: "Luxury Superyacht", price: 300000000, icon: "🛳️" },
+                    { name: "Mona Lisa", price: 780000000, icon: "🖼️" },
+                    { name: "Skyscraper", price: 850000000, icon: "🏢" },
+                    { name: "Cruise Ship", price: 930000000, icon: "🚢" },
+                    { name: "Antilia Mansion", price: 1000000000, icon: "🏛️" },
+                    { name: "NBA Team", price: 2120000000, icon: "🏀" },
+                    { name: "Space Station", price: 4000000000, icon: "🛰️" },
+                    { name: "Small Country GDP", price: 10000000000, icon: "🌍" }
+                ];
+                
+                this.init();
+            }
+
+            init() {
+                this.renderItems();
+                this.updateDisplay();
+            }
+
+            formatMoney(amount) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(amount);
+            }
+
+            renderItems() {
+                const grid = document.getElementById('itemsGrid');
+                grid.innerHTML = '';
+
+                this.items.forEach((item, index) => {
+                    const canAfford = this.currentBudget >= item.price;
+                    const quantity = this.purchases[index] || 0;
+                    
+                    const itemCard = document.createElement('div');
+                    itemCard.className = `item-card bg-white rounded-lg shadow-md overflow-hidden ${!canAfford ? 'opacity-50' : ''}`;
+                    
+                    itemCard.innerHTML = `
+                        <div class="item-image h-32 text-white text-4xl">
+                            ${item.icon}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-800 text-sm mb-2">${item.name}</h3>
+                            <div class="text-lg font-bold text-green-600 mb-3">${this.formatMoney(item.price)}</div>
+                            
+                            <div class="flex items-center justify-between mb-3">
+                                <button class="sell-btn bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors ${quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}" 
+                                        onclick="simulator.sellItem(${index})" ${quantity === 0 ? 'disabled' : ''}>
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                
+                                <span class="font-bold text-gray-700 px-3">${quantity}</span>
+                                
+                                <button class="buy-btn bg-green-500 hover:bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors ${!canAfford ? 'opacity-50 cursor-not-allowed' : ''}" 
+                                        onclick="simulator.buyItem(${index})" ${!canAfford ? 'disabled' : ''}>
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            
+                            ${quantity > 0 ? `<div class="text-xs text-gray-600">Total: ${this.formatMoney(item.price * quantity)}</div>` : ''}
+                        </div>
+                    `;
+                    
+                    grid.appendChild(itemCard);
+                });
+            }
+
+            buyItem(index) {
+                const item = this.items[index];
+                if (this.currentBudget >= item.price) {
+                    this.currentBudget -= item.price;
+                    this.purchases[index] = (this.purchases[index] || 0) + 1;
+                    this.updateDisplay();
+                    this.animateBudget();
+                }
+            }
+
+            sellItem(index) {
+                const item = this.items[index];
+                if (this.purchases[index] && this.purchases[index] > 0) {
+                    this.currentBudget += item.price;
+                    this.purchases[index]--;
+                    if (this.purchases[index] === 0) {
+                        delete this.purchases[index];
+                    }
+                    this.updateDisplay();
+                    this.animateBudget();
+                }
+            }
+
+            updateDisplay() {
+                // Update budget
+                document.getElementById('budget').textContent = this.formatMoney(this.currentBudget);
+                
+                // Update total spent
+                const totalSpent = this.initialBudget - this.currentBudget;
+                document.getElementById('totalSpent').textContent = this.formatMoney(totalSpent);
+                
+                // Update receipt
+                this.updateReceipt();
+                
+                // Re-render items to update button states
+                this.renderItems();
+            }
+
+            updateReceipt() {
+                const receipt = document.getElementById('receipt');
+                const purchasedItems = Object.entries(this.purchases).filter(([_, quantity]) => quantity > 0);
+                
+                if (purchasedItems.length === 0) {
+                    receipt.innerHTML = '<div class="text-gray-600">No items purchased yet</div>';
+                    return;
+                }
+                
+                receipt.innerHTML = purchasedItems.map(([index, quantity]) => {
+                    const item = this.items[index];
+                    const total = item.price * quantity;
+                    return `
+                        <div class="flex justify-between items-center py-1">
+                            <span>${item.icon} ${item.name} × ${quantity}</span>
+                            <span class="font-semibold">${this.formatMoney(total)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            animateBudget() {
+                const budgetElement = document.getElementById('budget');
+                budgetElement.classList.add('budget-animation');
+                setTimeout(() => {
+                    budgetElement.classList.remove('budget-animation');
+                }, 300);
+            }
+        }
+
+        // Initialize the simulator when the page loads
+        let simulator;
+        document.addEventListener('DOMContentLoaded', () => {
+            simulator = new SpendingSimulator();
+        });
+    </script>
+</body>
+</html>
